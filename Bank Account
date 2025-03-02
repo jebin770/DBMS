@@ -1,0 +1,42 @@
+ 
+ 
+ 
+ 
+SQL> create table ACCTMASTER(accno INT primary key,name char(25),balance 
+number(10)); 
+  
+SQL> create table ACCTTRAN(accno INT references ACCTMASTER(accno),tran_date 
+date default sysdate,deb_cred char(7),flag char(2) default 'N',amount number(10)); 
+ 
+SQL> insert into ACCTMASTER values(&accno,'&name',&balance); 
+SQL> insert into ACCTTRAN values(&accno,'&tran_date','&deb_cred','&flag',&amt); 
+ 
+declare 
+no INT; 
+bal number(10); 
+trdate date; 
+dc char(7); 
+a number(10); 
+fl char(2); 
+cursor ctrn is select * from ACCTTRAN where flag='n' or flag='N'; 
+begin 
+open ctrn; 
+loop 
+fetch ctrn into no,trdate,dc,fl,a; 
+if ctrn%found then 
+if dc='Debit' then 
+update ACCTMASTER set balance=balance-a where accno=no; 
+update ACCTTRAN set flag='Y' where accno=no; 
+elsif dc='Credit' then 
+update ACCTMASTER set balance=balance+a where accno=no; 
+update ACCTTRAN set flag='Y' where accno=no; 
+end if; 
+else 
+exit; 
+end if; 
+end loop; 
+commit; 
+close ctrn; 
+end; 
+/ 
+  
